@@ -1,0 +1,7 @@
+# Mini Mart Management System — Python dependencies
+# All GUI and DB functionality uses the standard library only.
+# No third-party packages required.
+#
+# Python >= 3.10 recommended
+# tkinter ships with most Python distributions.
+# If missing on Linux:  sudo apt install python3-tk
