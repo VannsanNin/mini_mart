@@ -3,7 +3,7 @@ db.py — SQLite persistence layer implementing IProductRepository & ISaleReposi
 """
 import sqlite3
 from contextlib import contextmanager
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Optional
 
 from core.interfaces import (
@@ -154,18 +154,22 @@ class SaleRepository(ISaleRepository):
         return sale
 
     def get_weekly_report(self, year: int, week: int) -> ReportDTO:
+        jan4 = datetime(year, 1, 4)
+        monday_w1 = jan4 - timedelta(days=jan4.weekday())
+        week_start = monday_w1 + timedelta(weeks=week - 1)
+        week_end = week_start + timedelta(days=6)
         with _connect(self._path) as conn:
             row = conn.execute("""
                 SELECT
                     COALESCE(SUM(s.total), 0)                          AS income,
-                    COALESCE(SUM(si.quantity * p.cost), 0)             AS expense,
+                    COALESCE(SUM(COALESCE(si.quantity, 0) *
+                                 COALESCE(p.cost, 0)), 0)             AS expense,
                     COUNT(DISTINCT s.sale_id)                          AS num_sales
                 FROM sales s
-                JOIN sale_items si ON si.sale_id = s.sale_id
-                JOIN products   p  ON p.product_id = si.product_id
-                WHERE CAST(strftime('%Y', s.sale_date) AS INTEGER) = ?
-                  AND CAST(strftime('%W', s.sale_date) AS INTEGER) = ?
-            """, (year, week)).fetchone()
+                LEFT JOIN sale_items si ON si.sale_id = s.sale_id
+                LEFT JOIN products   p  ON p.product_id = si.product_id
+                WHERE s.sale_date >= ? AND s.sale_date <= ?
+            """, (week_start.isoformat(), week_end.isoformat())).fetchone()
         return self._build_report(f"Week {week:02d} – {year}", row)
 
     def get_monthly_report(self, year: int, month: int) -> ReportDTO:

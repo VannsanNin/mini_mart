@@ -9,17 +9,68 @@ from core.interfaces import ProductDTO, SaleItemDTO
 from core.services import InventoryService, SalesService
 from database.db import ProductRepository, SaleRepository, init_db
 
-# ── Colour palette ─────────────────────────────────────────────────────────────
-BG       = "#0F1117"   # near-black base
-SURFACE  = "#1A1D27"   # card/panel
-SURFACE2 = "#252836"   # raised element
-ACCENT   = "#4F8EF7"   # cobalt blue – primary action
-SUCCESS  = "#3DDC97"   # green
-DANGER   = "#F75F4F"   # red
-WARNING  = "#F7C94F"   # amber
-TEXT     = "#E8EAF0"   # primary text
-MUTED    = "#8890A4"   # secondary text
-BORDER   = "#2E3247"   # separator
+# ── Theme system ───────────────────────────────────────────────────────────────
+THEMES = {
+    "dark": {
+        "BG":       "#0F1117",
+        "SURFACE":  "#1A1D27",
+        "SURFACE2": "#252836",
+        "ACCENT":   "#4F8EF7",
+        "SUCCESS":  "#3DDC97",
+        "DANGER":   "#F75F4F",
+        "WARNING":  "#F7C94F",
+        "TEXT":     "#E8EAF0",
+        "MUTED":    "#8890A4",
+        "BORDER":   "#2E3247",
+        "FOCUS":    "#2D3149",
+        "BTN_ACTIVE":   "#3A6FD8",
+        "BTN_PRESSED":  "#2C5AB8",
+        "SUCC_ACTIVE":  "#2EB87A",
+        "DANG_ACTIVE":  "#D44535",
+    },
+    "light": {
+        "BG":       "#F5F6FA",
+        "SURFACE":  "#FFFFFF",
+        "SURFACE2": "#E2E5ED",
+        "ACCENT":   "#3366CC",
+        "SUCCESS":  "#28A745",
+        "DANGER":   "#DC3545",
+        "WARNING":  "#CC9200",
+        "TEXT":     "#1C1E26",
+        "MUTED":    "#6C7284",
+        "BORDER":   "#D1D5E0",
+        "FOCUS":    "#C8D0E0",
+        "BTN_ACTIVE":   "#2952A3",
+        "BTN_PRESSED":  "#1E3D7A",
+        "SUCC_ACTIVE":  "#1E8432",
+        "DANG_ACTIVE":  "#A82835",
+    },
+}
+
+_current_theme = "dark"
+
+def _set_theme(name):
+    global _current_theme, BG, SURFACE, SURFACE2, ACCENT, SUCCESS, DANGER, WARNING, TEXT, MUTED, BORDER, FOCUS
+    global BTN_ACTIVE, BTN_PRESSED, SUCC_ACTIVE, DANG_ACTIVE
+    c = THEMES[name]
+    BG       = c["BG"]
+    SURFACE  = c["SURFACE"]
+    SURFACE2 = c["SURFACE2"]
+    ACCENT   = c["ACCENT"]
+    SUCCESS  = c["SUCCESS"]
+    DANGER   = c["DANGER"]
+    WARNING  = c["WARNING"]
+    TEXT     = c["TEXT"]
+    MUTED    = c["MUTED"]
+    BORDER   = c["BORDER"]
+    FOCUS    = c["FOCUS"]
+    BTN_ACTIVE  = c["BTN_ACTIVE"]
+    BTN_PRESSED = c["BTN_PRESSED"]
+    SUCC_ACTIVE = c["SUCC_ACTIVE"]
+    DANG_ACTIVE = c["DANG_ACTIVE"]
+    _current_theme = name
+
+_set_theme("dark")
 
 
 def _style(root: tk.Tk) -> None:
@@ -45,6 +96,13 @@ def _style(root: tk.Tk) -> None:
     s.configure("Bad.TLabel",   background=SURFACE, foreground=DANGER,
                 font=("Segoe UI", 22, "bold"))
 
+    s.configure("BigStat.TLabel", background=SURFACE, foreground=ACCENT, font=("Segoe UI", 28, "bold"))
+    s.configure("BigWarn.TLabel", background=SURFACE, foreground=WARNING, font=("Segoe UI", 28, "bold"))
+    s.configure("BigGood.TLabel", background=SURFACE, foreground=SUCCESS, font=("Segoe UI", 28, "bold"))
+    s.configure("Total.TLabel",  background=SURFACE, foreground=SUCCESS, font=("Segoe UI", 18, "bold"))
+    s.configure("Period.TLabel", background=SURFACE, foreground=MUTED,   font=("Segoe UI", 11))
+    s.configure("RptStat.TLabel", background=SURFACE, foreground=ACCENT, font=("Segoe UI", 24, "bold"))
+
     s.configure("TNotebook",           background=BG, borderwidth=0, tabmargins=0)
     s.configure("TNotebook.Tab",       background=SURFACE2, foreground=MUTED,
                 font=("Segoe UI", 10), padding=[18, 8], borderwidth=0)
@@ -56,7 +114,7 @@ def _style(root: tk.Tk) -> None:
                  ("background", "foreground", "fieldbackground",
                   "bordercolor", "lightcolor", "darkcolor")},
                 font=("Segoe UI", 10), padding=6, relief="flat")
-    s.map("TEntry", fieldbackground=[("focus", "#2D3149")])
+    s.map("TEntry", fieldbackground=[("focus", FOCUS)])
 
     s.configure("TCombobox",    **{k: common[k] for k in
                  ("background", "foreground", "fieldbackground",
@@ -78,17 +136,17 @@ def _style(root: tk.Tk) -> None:
     s.configure("Primary.TButton", background=ACCENT,  foreground="#FFFFFF",
                 font=("Segoe UI", 10, "bold"), padding=[16, 8], relief="flat",
                 borderwidth=0)
-    s.map("Primary.TButton", background=[("active", "#3A6FD8"), ("pressed", "#2C5AB8")])
+    s.map("Primary.TButton", background=[("active", BTN_ACTIVE), ("pressed", BTN_PRESSED)])
 
     s.configure("Success.TButton", background=SUCCESS, foreground="#0F1117",
                 font=("Segoe UI", 10, "bold"), padding=[16, 8], relief="flat",
                 borderwidth=0)
-    s.map("Success.TButton", background=[("active", "#2EB87A")])
+    s.map("Success.TButton", background=[("active", SUCC_ACTIVE)])
 
     s.configure("Danger.TButton",  background=DANGER,  foreground="#FFFFFF",
                 font=("Segoe UI", 10, "bold"), padding=[16, 8], relief="flat",
                 borderwidth=0)
-    s.map("Danger.TButton",  background=[("active", "#D44535")])
+    s.map("Danger.TButton",  background=[("active", DANG_ACTIVE)])
 
     s.configure("TSpinbox",  background=SURFACE2, foreground=TEXT,
                 fieldbackground=SURFACE2, bordercolor=BORDER,
@@ -143,16 +201,15 @@ class DashboardTab(ttk.Frame):
 
         self._cards = {}
         specs = [
-            ("total_products", "Total Products",   ACCENT),
-            ("low_stock",      "Low Stock Items",  WARNING),
-            ("today_sales",    "Today's Sales",    SUCCESS),
+            ("total_products", "Total Products",   "BigStat.TLabel"),
+            ("low_stock",      "Low Stock Items",  "BigWarn.TLabel"),
+            ("today_sales",    "Today's Sales",    "BigGood.TLabel"),
         ]
-        for col, (key, title, color) in enumerate(specs):
+        for col, (key, title, style_name) in enumerate(specs):
             c = _card(self, padding=20)
             c.grid(row=1, column=col, sticky="nsew", padx=(0, 12 if col < 2 else 0))
             _label(c, title, style="Muted.TLabel").pack(anchor="w")
-            lbl = ttk.Label(c, text="—", background=SURFACE, foreground=color,
-                            font=("Segoe UI", 28, "bold"))
+            lbl = ttk.Label(c, text="—", style=style_name)
             lbl.pack(anchor="w", pady=(4, 0))
             self._cards[key] = lbl
 
@@ -170,6 +227,9 @@ class DashboardTab(ttk.Frame):
 
         self.rowconfigure(2, weight=1)
         self.refresh()
+
+    def apply_theme(self):
+        self._tv.tag_configure("low", foreground=WARNING)
 
     def refresh(self):
         products = self._inv.list_all()
@@ -332,6 +392,9 @@ class InventoryTab(ttk.Frame):
                 f"${p.price:.2f}", f"${p.cost:.2f}", p.stock,
             ), tags=(tag,))
 
+    def apply_theme(self):
+        self._tv.tag_configure("low", foreground=WARNING)
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB: Sales (Point of Sale)
@@ -404,9 +467,7 @@ class SalesTab(ttk.Frame):
         bottom.pack(fill="x", pady=(12, 0))
 
         _label(bottom, "Total:", style="Card.TLabel").pack(side="left")
-        self._total_lbl = ttk.Label(bottom, text="$0.00", background=SURFACE,
-                                    foreground=SUCCESS,
-                                    font=("Segoe UI", 18, "bold"))
+        self._total_lbl = ttk.Label(bottom, text="$0.00", style="Total.TLabel")
         self._total_lbl.pack(side="left", padx=8)
 
         btn_row = ttk.Frame(right, style="Card.TFrame")
@@ -497,9 +558,21 @@ class SalesTab(ttk.Frame):
 # ══════════════════════════════════════════════════════════════════════════════
 
 class SearchTab(ttk.Frame):
+    COL_MAP = {
+        "ID":         "product_id",
+        "Name":       "name",
+        "Category":   "category",
+        "Price ($)":  "price",
+        "Cost ($)":   "cost",
+        "Stock":      "stock",
+    }
+
     def __init__(self, master, inv: InventoryService):
         super().__init__(master, style="TFrame", padding=20)
         self._inv = inv
+        self._products: list = []
+        self._sort_col: str | None = None
+        self._sort_rev = False
         self._build()
 
     def _build(self):
@@ -523,20 +596,35 @@ class SearchTab(ttk.Frame):
         self.rowconfigure(2, weight=1)
         self.columnconfigure(0, weight=1)
 
-        cols = ("ID", "Name", "Category", "Price ($)", "Cost ($)", "Stock")
+        cols = tuple(self.COL_MAP.keys())
         self._tv, sb = _tree(res, cols, height=20)
         self._tv.pack(side="left", fill="both", expand=True)
         sb.pack(side="right", fill="y")
+        for col in cols:
+            self._tv.heading(col, command=lambda c=col: self._sort_by(c))
         self._show_all()
+
+    def _sort_by(self, col):
+        attr = self.COL_MAP[col]
+        if self._sort_col == col:
+            self._sort_rev = not self._sort_rev
+        else:
+            self._sort_col = col
+            self._sort_rev = False
+        self._products.sort(key=lambda p: getattr(p, attr) or 0, reverse=self._sort_rev)
+        self._populate(self._products)
 
     def _search(self):
         term = self._term.get().strip()
-        results = self._inv.search_products(term) if term else self._inv.list_all()
-        self._populate(results)
+        self._products = self._inv.search_products(term) if term else self._inv.list_all()
+        self._sort_col = None
+        self._populate(self._products)
 
     def _show_all(self):
         self._term.set("")
-        self._populate(self._inv.list_all())
+        self._products = self._inv.list_all()
+        self._sort_col = None
+        self._populate(self._products)
 
     def _populate(self, products):
         for row in self._tv.get_children():
@@ -578,9 +666,9 @@ class ReportsTab(ttk.Frame):
         ttk.Spinbox(ctrl, from_=1, to=12, textvariable=self._month,
                     width=4, font=("Segoe UI", 10)).pack(side="left", padx=(0, 16))
 
-        _label(ctrl, "Week (0–53):", style="Muted.TLabel").pack(side="left", padx=(0, 4))
+        _label(ctrl, "Week (1–53):", style="Muted.TLabel").pack(side="left", padx=(0, 4))
         self._week = tk.StringVar(value=str(now.isocalendar()[1]))
-        ttk.Spinbox(ctrl, from_=0, to=53, textvariable=self._week,
+        ttk.Spinbox(ctrl, from_=1, to=53, textvariable=self._week,
                     width=4, font=("Segoe UI", 10)).pack(side="left", padx=(0, 16))
 
         _btn(ctrl, "📅  Monthly Report", self._monthly).pack(side="left", padx=(0, 8))
@@ -591,8 +679,7 @@ class ReportsTab(ttk.Frame):
         stats.grid(row=2, column=0, columnspan=2, sticky="ew", pady=(0, 14))
         stats.columnconfigure((0, 1, 2, 3), weight=1)
 
-        self._period_lbl = ttk.Label(stats, text="—", background=SURFACE,
-                                     foreground=MUTED, font=("Segoe UI", 11))
+        self._period_lbl = ttk.Label(stats, text="—", style="Period.TLabel")
         self._period_lbl.grid(row=0, column=0, columnspan=4, sticky="w", pady=(0, 10))
 
         stat_defs = [
@@ -605,8 +692,7 @@ class ReportsTab(ttk.Frame):
             sf = ttk.Frame(stats, style="Card.TFrame")
             sf.grid(row=1, column=col, sticky="nsew", padx=(0, 12 if col < 3 else 0))
             _label(sf, title, style="Muted.TLabel").pack(anchor="w")
-            lbl = ttk.Label(sf, text="—", background=SURFACE,
-                            foreground=ACCENT, font=("Segoe UI", 24, "bold"))
+            lbl = ttk.Label(sf, text="—", style="RptStat.TLabel")
             lbl.pack(anchor="w")
             setattr(self, f"_{attr}", lbl)
 
@@ -656,6 +742,10 @@ class ReportsTab(ttk.Frame):
             r.num_sales,
         ), tags=(tag,))
 
+    def apply_theme(self):
+        self._tv.tag_configure("profit", foreground=SUCCESS)
+        self._tv.tag_configure("loss", foreground=DANGER)
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # Main Application Window
@@ -682,22 +772,47 @@ class MiniMartApp(tk.Tk):
         self._build_notebook()
 
     def _build_header(self):
-        hdr = tk.Frame(self, bg=SURFACE, height=54)
-        hdr.pack(fill="x", side="top")
-        hdr.pack_propagate(False)
+        self._hdr = tk.Frame(self, bg=SURFACE, height=54)
+        self._hdr.pack(fill="x", side="top")
+        self._hdr.pack_propagate(False)
 
-        tk.Label(hdr, text="🛒  Mini Mart Management System",
-                 bg=SURFACE, fg=TEXT, font=("Segoe UI", 14, "bold")
-                 ).pack(side="left", padx=20, pady=12)
+        self._title_lbl = tk.Label(self._hdr, text="🛒  Mini Mart Management System",
+                                   bg=SURFACE, fg=TEXT,
+                                   font=("Segoe UI", 14, "bold"))
+        self._title_lbl.pack(side="left", padx=20, pady=12)
 
-        self._clock_lbl = tk.Label(hdr, text="", bg=SURFACE, fg=MUTED,
+        self._clock_lbl = tk.Label(self._hdr, text="", bg=SURFACE, fg=MUTED,
                                    font=("Segoe UI", 10))
         self._clock_lbl.pack(side="right", padx=20)
+
+        self._theme_btn = tk.Button(self._hdr, text="☀️  Light", bg=SURFACE2, fg=TEXT,
+                                     font=("Segoe UI", 9), bd=0, padx=10, pady=2,
+                                     cursor="hand2", activebackground=ACCENT,
+                                     activeforeground="#FFFFFF",
+                                     command=self._toggle_theme)
+        self._theme_btn.pack(side="right", padx=(0, 8))
+
         self._tick()
 
     def _tick(self):
         self._clock_lbl.config(text=datetime.now().strftime("%a %d %b %Y  %H:%M:%S"))
         self.after(1000, self._tick)
+
+    def _toggle_theme(self):
+        new = "light" if _current_theme == "dark" else "dark"
+        _set_theme(new)
+        _style(self)
+        self.configure(bg=BG)
+        self._hdr.configure(bg=SURFACE)
+        self._title_lbl.configure(bg=SURFACE, fg=TEXT)
+        self._clock_lbl.configure(bg=SURFACE, fg=MUTED)
+        icon = "🌙" if new == "dark" else "☀️"
+        label = "  Dark" if new == "dark" else "  Light"
+        self._theme_btn.config(text=icon + label, bg=SURFACE2, fg=TEXT,
+                               activebackground=ACCENT)
+        for tab in (self._dash, self._inv_tab, self._sale_tab, self._rpt_tab):
+            if hasattr(tab, "apply_theme"):
+                tab.apply_theme()
 
     def _build_notebook(self):
         nb = ttk.Notebook(self)

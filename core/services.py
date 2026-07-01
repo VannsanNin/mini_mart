@@ -14,6 +14,7 @@ from core.interfaces import (
 class InventoryService(IInventoryService):
     def __init__(self, repo: IProductRepository):
         self._repo = repo
+        print(repo)
 
     def add_product(self, product: ProductDTO) -> ProductDTO:
         if not product.name.strip():
